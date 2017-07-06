@@ -3,6 +3,7 @@
 import expect from 'expect.js'
 import React, {PureComponent} from 'react'
 import {render, unmountComponentAtNode, findDOMNode} from 'react-dom'
+import ReactDOMServer from 'react-dom/server';
 import deepForceUpdate from 'react-deep-force-update'
 import {stripIndent} from 'common-tags'
 import preset from 'jss-preset-default'
@@ -449,6 +450,127 @@ describe('react-jss', () => {
           border: blue;
         }
       `)
+    })
+
+    it('should be idempotent', () => {
+      const mapToProp = name => props => props[name]
+
+      const Component = injectSheet({
+        button: {
+          color: mapToProp('idle'),
+          '&:hover': {color: mapToProp('hover')},
+          '&:active': {color: mapToProp('active')},
+          '&:visited': {color: mapToProp('visited')}
+        }
+      })()
+
+      const customSheets1 = new SheetsRegistry()
+      const customSheets2 = new SheetsRegistry()
+      const customSheets3 = new SheetsRegistry()
+
+      ReactDOMServer.renderToString(
+        <JssProvider registry={customSheets1}>
+          <Component
+            idle="#000"
+            hover="#333"
+            active="#666"
+            visited="#ccc"
+          />
+        </JssProvider>
+      )
+
+      ReactDOMServer.renderToString(
+        <JssProvider registry={customSheets2}>
+          <Component
+            idle="#000"
+            hover="#333"
+            active="#666"
+            visited="#ccc"
+          />
+        </JssProvider>
+      )
+
+      ReactDOMServer.renderToString(
+        <JssProvider registry={customSheets3}>
+          <Component
+            idle="#000"
+            hover="#333"
+            active="#666"
+            visited="#ccc"
+          />
+        </JssProvider>
+      )
+
+      // Removing appended styles after `ReactDOMServer.renderToString`
+      Array
+        .from(document.querySelectorAll('style'))
+        .forEach(node => node.parentNode.removeChild(node))
+
+      const result1 = customSheets1.toString()
+      const result2 = customSheets2.toString()
+      const result3 = customSheets3.toString()
+
+      expect(result1).to.equal(result2)
+      expect(result1).to.equal(result3)
+      expect(result2).to.equal(result3)
+    })
+
+    it('should render deterministically on server and client', () => {
+      const mapToProp = name => props => props[name]
+
+      const ComponentA = injectSheet({
+        button: {
+          color: mapToProp('idle'),
+          '&:hover': {color: mapToProp('hover')},
+          '&:active': {color: mapToProp('active')},
+          '&:visited': {color: mapToProp('visited')}
+        }
+      })()
+
+      const ComponentB = injectSheet({
+        button: {
+          color: mapToProp('idle'),
+          '&:hover': {color: mapToProp('hover')},
+          '&:active': {color: mapToProp('active')},
+          '&:visited': {color: mapToProp('visited')}
+        }
+      })()
+
+      const customSheets1 = new SheetsRegistry()
+      const customSheets2 = new SheetsRegistry()
+
+      ReactDOMServer.renderToString(
+        <JssProvider registry={customSheets1}>
+          <ComponentA
+            idle="#000"
+            hover="#333"
+            active="#666"
+            visited="#ccc"
+          />
+        </JssProvider>
+      )
+
+      // Removing appended styles after `ReactDOMServer.renderToString`
+      Array
+        .from(document.querySelectorAll('style'))
+        .forEach(node => node.parentNode.removeChild(node))
+
+      render(
+        <JssProvider registry={customSheets2}>
+          <ComponentB
+            idle="#000"
+            hover="#333"
+            active="#666"
+            visited="#ccc"
+          />
+        </JssProvider>,
+        node
+      )
+
+      const result1 = customSheets1.toString()
+      const result2 = customSheets2.toString()
+
+      expect(result1).to.equal(result2)
     })
   })
 
