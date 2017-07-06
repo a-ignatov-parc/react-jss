@@ -96,7 +96,7 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
       if (this.dynamicSheet) this.dynamicSheet.update(nextProps)
     }
 
-    componentWillUpdate(nextProps, nextState) {
+    componentWillUpdate() {
       if (process.env.NODE_ENV !== 'production') {
         const {jssSheetsRegistry} = this.context
         const staticSheet = staticSheetCache.get(jssSheetsRegistry)
