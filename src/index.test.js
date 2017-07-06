@@ -453,6 +453,8 @@ describe('react-jss', () => {
     })
 
     it('should be idempotent', () => {
+      const localJss = createJss({virtual: true})
+
       const Component = injectSheet({
         button: {
           color: props => props.color
@@ -463,21 +465,16 @@ describe('react-jss', () => {
       const customSheets2 = new SheetsRegistry()
 
       ReactDOMServer.renderToString(
-        <JssProvider registry={customSheets1}>
+        <JssProvider jss={localJss} registry={customSheets1}>
           <Component color="#000" />
         </JssProvider>
       )
 
       ReactDOMServer.renderToString(
-        <JssProvider registry={customSheets2}>
+        <JssProvider jss={localJss} registry={customSheets2}>
           <Component color="#000" />
         </JssProvider>
       )
-
-      // Removing appended styles after `ReactDOMServer.renderToString`
-      Array
-        .from(document.querySelectorAll('style'))
-        .forEach(node => node.parentNode.removeChild(node))
 
       const result1 = customSheets1.toString()
       const result2 = customSheets2.toString()
@@ -486,6 +483,8 @@ describe('react-jss', () => {
     })
 
     it('should render deterministically on server and client', () => {
+      const localJss = createJss({virtual: true})
+
       const ComponentA = injectSheet({
         button: {
           color: props => props.color
@@ -502,18 +501,13 @@ describe('react-jss', () => {
       const customSheets2 = new SheetsRegistry()
 
       ReactDOMServer.renderToString(
-        <JssProvider registry={customSheets1}>
+        <JssProvider jss={localJss} registry={customSheets1}>
           <ComponentA color="#000" />
         </JssProvider>
       )
 
-      // Removing appended styles after `ReactDOMServer.renderToString`
-      Array
-        .from(document.querySelectorAll('style'))
-        .forEach(node => node.parentNode.removeChild(node))
-
       render(
-        <JssProvider registry={customSheets2}>
+        <JssProvider jss={localJss} registry={customSheets2}>
           <ComponentB color="#000" />
         </JssProvider>,
         node
