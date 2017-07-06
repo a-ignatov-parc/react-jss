@@ -453,51 +453,24 @@ describe('react-jss', () => {
     })
 
     it('should be idempotent', () => {
-      const mapToProp = name => props => props[name]
-
       const Component = injectSheet({
         button: {
-          color: mapToProp('idle'),
-          '&:hover': {color: mapToProp('hover')},
-          '&:active': {color: mapToProp('active')},
-          '&:visited': {color: mapToProp('visited')}
+          color: props => props.color
         }
       })()
 
       const customSheets1 = new SheetsRegistry()
       const customSheets2 = new SheetsRegistry()
-      const customSheets3 = new SheetsRegistry()
 
       ReactDOMServer.renderToString(
         <JssProvider registry={customSheets1}>
-          <Component
-            idle="#000"
-            hover="#333"
-            active="#666"
-            visited="#ccc"
-          />
+          <Component color="#000" />
         </JssProvider>
       )
 
       ReactDOMServer.renderToString(
         <JssProvider registry={customSheets2}>
-          <Component
-            idle="#000"
-            hover="#333"
-            active="#666"
-            visited="#ccc"
-          />
-        </JssProvider>
-      )
-
-      ReactDOMServer.renderToString(
-        <JssProvider registry={customSheets3}>
-          <Component
-            idle="#000"
-            hover="#333"
-            active="#666"
-            visited="#ccc"
-          />
+          <Component color="#000" />
         </JssProvider>
       )
 
@@ -508,31 +481,20 @@ describe('react-jss', () => {
 
       const result1 = customSheets1.toString()
       const result2 = customSheets2.toString()
-      const result3 = customSheets3.toString()
 
       expect(result1).to.equal(result2)
-      expect(result1).to.equal(result3)
-      expect(result2).to.equal(result3)
     })
 
     it('should render deterministically on server and client', () => {
-      const mapToProp = name => props => props[name]
-
       const ComponentA = injectSheet({
         button: {
-          color: mapToProp('idle'),
-          '&:hover': {color: mapToProp('hover')},
-          '&:active': {color: mapToProp('active')},
-          '&:visited': {color: mapToProp('visited')}
+          color: props => props.color
         }
       })()
 
       const ComponentB = injectSheet({
         button: {
-          color: mapToProp('idle'),
-          '&:hover': {color: mapToProp('hover')},
-          '&:active': {color: mapToProp('active')},
-          '&:visited': {color: mapToProp('visited')}
+          color: props => props.color
         }
       })()
 
@@ -541,12 +503,7 @@ describe('react-jss', () => {
 
       ReactDOMServer.renderToString(
         <JssProvider registry={customSheets1}>
-          <ComponentA
-            idle="#000"
-            hover="#333"
-            active="#666"
-            visited="#ccc"
-          />
+          <ComponentA color="#000" />
         </JssProvider>
       )
 
@@ -557,12 +514,7 @@ describe('react-jss', () => {
 
       render(
         <JssProvider registry={customSheets2}>
-          <ComponentB
-            idle="#000"
-            hover="#333"
-            active="#666"
-            visited="#ccc"
-          />
+          <ComponentB color="#000" />
         </JssProvider>,
         node
       )
