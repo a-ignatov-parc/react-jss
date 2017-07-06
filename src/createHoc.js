@@ -19,17 +19,9 @@ const inc = sheet => ++sheet[refNs]
  * @return {Component}
  */
 export default (stylesOrSheet, InnerComponent, options = {}) => {
-  let styles = stylesOrSheet
-  let staticSheet = null
-  let dynamicStyles
-
-  // Accept StyleSheet instance.
-  if (stylesOrSheet && typeof stylesOrSheet.attach === 'function') {
-    staticSheet = stylesOrSheet
-    styles = null
-  }
-
+  const stylesIsInstance = stylesOrSheet && typeof stylesOrSheet.attach === 'function'
   const displayName = getDisplayName(InnerComponent)
+  const staticSheetCache = new Map()
 
   if (!options.meta) options.meta = displayName
 
@@ -37,21 +29,6 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
     ...options,
     meta: `${options.meta}Dynamic`,
     link: true
-  }
-
-  function ref(localJss, contextSheetOptions) {
-    if (!staticSheet) {
-      staticSheet = localJss.createStyleSheet(styles, {...options, ...contextSheetOptions})
-      dynamicStyles = compose(staticSheet, getDynamicStyles(styles))
-    }
-    if (staticSheet[refNs] === undefined) staticSheet[refNs] = 0
-    if (refs(staticSheet) === 0) staticSheet.attach()
-    inc(staticSheet)
-    return staticSheet
-  }
-
-  function deref() {
-    if (dec(staticSheet) === 0) staticSheet.detach()
   }
 
   return class Jss extends Component {
@@ -68,18 +45,38 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
     static defaultProps = InnerComponent.defaultProps
 
     componentWillMount() {
-      this.staticSheet = ref(this.getJss(), this.context.jssSheetOptions)
-      if (this.dynamicSheet) this.dynamicSheet.attach()
-      else if (dynamicStyles) {
-        this.dynamicSheet = this.getJss()
-          .createStyleSheet(dynamicStyles, {
-            ...dynamicSheetOptions,
-            ...this.context.jssSheetOptions
-          })
-          .update(this.props)
-          .attach()
+      const {
+        jssSheetOptions,
+        jssSheetsRegistry,
+      } = this.context
+
+      const localJss = this.getJss()
+
+      if (stylesIsInstance) {
+        this.staticSheet = stylesOrSheet
+      } else if (staticSheetCache.has(jssSheetsRegistry)) {
+        this.staticSheet = staticSheetCache.get(jssSheetsRegistry)
+      } else {
+        this.staticSheet = localJss.createStyleSheet(stylesOrSheet, {...options, ...jssSheetOptions})
+        staticSheetCache.set(jssSheetsRegistry, this.staticSheet)
       }
-      this.addToRegistry(this.context.jssSheetsRegistry)
+
+      if (!stylesIsInstance && !this.dynamicSheet) {
+        this.dynamicSheet = localJss.createStyleSheet(compose(this.staticSheet, getDynamicStyles(stylesOrSheet)), {
+          ...dynamicSheetOptions,
+          ...jssSheetOptions
+        })
+      }
+
+      if (this.staticSheet[refNs] === undefined) this.staticSheet[refNs] = 0
+      if (refs(this.staticSheet) === 0) this.staticSheet.attach()
+      inc(this.staticSheet)
+
+      if (this.dynamicSheet) {
+        this.dynamicSheet.update(this.props)
+        this.dynamicSheet.attach()
+      }
+      this.addToRegistry(jssSheetsRegistry)
     }
 
     addToRegistry(registry) {
@@ -92,28 +89,17 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
       if (nextContext.jssSheetsRegistry !== this.context.jssSheetsRegistry) {
         this.addToRegistry(nextContext.jssSheetsRegistry)
       }
-      if (this.dynamicSheet) {
-        this.dynamicSheet.update(nextProps)
-      }
-    }
-
-    componentWillUpdate() {
-      if (process.env.NODE_ENV !== 'production') {
-        // Support React Hot Loader.
-        if (this.staticSheet !== staticSheet) {
-          this.staticSheet.detach()
-          this.staticSheet = ref(this.getJss(), this.context.jssSheetOptions)
-        }
-      }
+      if (this.dynamicSheet) this.dynamicSheet.update(nextProps)
     }
 
     componentWillUnmount() {
-      if (this.staticSheet && !staticSheet) {
+      if (this.staticSheet && !stylesIsInstance) {
         this.staticSheet.detach()
         const {jssSheetsRegistry} = this.context
         if (jssSheetsRegistry) jssSheetsRegistry.remove(this.staticSheet)
+      } else if (dec(this.staticSheet) === 0) {
+        this.staticSheet.detach()
       }
-      else deref()
       if (this.dynamicSheet) this.dynamicSheet.detach()
     }
 
