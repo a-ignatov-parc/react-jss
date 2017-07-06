@@ -62,10 +62,14 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
       }
 
       if (!stylesIsInstance && !this.dynamicSheet) {
-        this.dynamicSheet = localJss.createStyleSheet(compose(this.staticSheet, getDynamicStyles(stylesOrSheet)), {
-          ...dynamicSheetOptions,
-          ...jssSheetOptions
-        })
+        const dynamicStyles = getDynamicStyles(stylesOrSheet)
+
+        if (dynamicStyles) {
+          this.dynamicSheet = localJss.createStyleSheet(compose(this.staticSheet, dynamicStyles), {
+            ...dynamicSheetOptions,
+            ...jssSheetOptions
+          })
+        }
       }
 
       if (this.staticSheet[refNs] === undefined) this.staticSheet[refNs] = 0
@@ -92,15 +96,33 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
       if (this.dynamicSheet) this.dynamicSheet.update(nextProps)
     }
 
+    componentWillUpdate(nextProps, nextState) {
+      if (process.env.NODE_ENV !== 'production') {
+        const {jssSheetsRegistry} = this.context
+        const staticSheet = staticSheetCache.get(jssSheetsRegistry)
+
+        // Support React Hot Loader.
+        if (this.staticSheet !== staticSheet) {
+          this.componentWillUnmount()
+          this.componentWillMount()
+        }
+      }
+    }
+
     componentWillUnmount() {
+      const {jssSheetsRegistry} = this.context
+
       if (this.staticSheet && !stylesIsInstance) {
         this.staticSheet.detach()
-        const {jssSheetsRegistry} = this.context
         if (jssSheetsRegistry) jssSheetsRegistry.remove(this.staticSheet)
       } else if (dec(this.staticSheet) === 0) {
         this.staticSheet.detach()
       }
-      if (this.dynamicSheet) this.dynamicSheet.detach()
+
+      if (this.dynamicSheet) {
+        this.dynamicSheet.detach()
+        if (jssSheetsRegistry) jssSheetsRegistry.remove(this.dynamicSheet)
+      }
     }
 
     getJss() {
