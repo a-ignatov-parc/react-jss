@@ -54,10 +54,15 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
 
       if (stylesIsInstance) {
         this.staticSheet = stylesOrSheet
-      } else if (staticSheetCache.has(jssSheetsRegistry)) {
+      }
+      else if (staticSheetCache.has(jssSheetsRegistry)) {
         this.staticSheet = staticSheetCache.get(jssSheetsRegistry)
-      } else {
-        this.staticSheet = localJss.createStyleSheet(stylesOrSheet, {...options, ...jssSheetOptions})
+      }
+      else {
+        this.staticSheet = localJss.createStyleSheet(stylesOrSheet, {
+          ...options,
+          ...jssSheetOptions
+        })
         staticSheetCache.set(jssSheetsRegistry, this.staticSheet)
       }
 
@@ -115,7 +120,8 @@ export default (stylesOrSheet, InnerComponent, options = {}) => {
       if (this.staticSheet && !stylesIsInstance) {
         this.staticSheet.detach()
         if (jssSheetsRegistry) jssSheetsRegistry.remove(this.staticSheet)
-      } else if (dec(this.staticSheet) === 0) {
+      }
+      else if (dec(this.staticSheet) === 0) {
         this.staticSheet.detach()
       }
 

@@ -3,7 +3,7 @@
 import expect from 'expect.js'
 import React, {PureComponent} from 'react'
 import {render, unmountComponentAtNode, findDOMNode} from 'react-dom'
-import ReactDOMServer from 'react-dom/server';
+import ReactDOMServer from 'react-dom/server'
 import deepForceUpdate from 'react-deep-force-update'
 import {stripIndent} from 'common-tags'
 import preset from 'jss-preset-default'
