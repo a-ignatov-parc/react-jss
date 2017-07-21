@@ -394,6 +394,12 @@ describe('react-jss', () => {
         </JssProvider>
       )
 
+      // Removing appended styles after `ReactDOMServer.renderToString` because
+      // we can't use virtual renderer.
+      Array
+        .from(document.querySelectorAll('style'))
+        .forEach(styleNode => styleNode.parentNode.removeChild(styleNode))
+
       const result1 = customSheets1.toString()
       const result2 = customSheets2.toString()
 

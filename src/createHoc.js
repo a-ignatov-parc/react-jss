@@ -48,9 +48,8 @@ export default (stylesOrCreator, InnerComponent, options = {}) => {
   const isThemingEnabled = typeof stylesOrCreator === 'function'
 
   const displayName = `Jss(${getDisplayName(InnerComponent)})`
+  const staticSheetCache = new Map()
   const noTheme = {}
-  let manager = new SheetsManager()
-  let providerId
 
   return class Jss extends Component {
     static displayName = displayName
@@ -73,12 +72,14 @@ export default (stylesOrCreator, InnerComponent, options = {}) => {
     }
 
     get manager() {
-      if (providerId && this.context[ns.providerId] !== providerId) {
-        manager = new SheetsManager()
+      if (!staticSheetCache.has(this.registry)) {
+        staticSheetCache.set(this.registry, new SheetsManager())
       }
-      providerId = this.context[ns.providerId]
+      return staticSheetCache.get(this.registry)
+    }
 
-      return manager
+    get registry() {
+      return this.context[ns.sheetsRegistry]
     }
 
     createState({theme, dynamicSheet}) {
@@ -111,16 +112,14 @@ export default (stylesOrCreator, InnerComponent, options = {}) => {
     }
 
     manage({theme, dynamicSheet}) {
-      const registry = this.context[ns.sheetsRegistry]
-
       const staticSheet = this.manager.manage(theme)
-      if (registry) registry.add(staticSheet)
+      if (this.registry) this.registry.add(staticSheet)
 
       if (dynamicSheet) {
         dynamicSheet
           .update(this.props)
           .attach()
-        if (registry) registry.add(dynamicSheet)
+        if (this.registry) this.registry.add(dynamicSheet)
       }
     }
 
