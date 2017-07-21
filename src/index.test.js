@@ -395,7 +395,7 @@ describe('react-jss', () => {
       )
 
       // Removing appended styles after `ReactDOMServer.renderToString` because
-      // we can't use virtual renderer.
+      // we can't use virtual renderer for this specific test case.
       Array
         .from(document.querySelectorAll('style'))
         .forEach(styleNode => styleNode.parentNode.removeChild(styleNode))

@@ -5,6 +5,7 @@ import compose from './compose'
 import getDisplayName from './getDisplayName'
 import * as ns from './ns'
 import contextTypes from './contextTypes'
+import Map from './map'
 
 // Like a Symbol
 const dynamicStylesNs = Math.random()
