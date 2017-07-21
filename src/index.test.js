@@ -385,10 +385,6 @@ describe('react-jss', () => {
       )
 
       renderToString(
-        <Component color="#000" />
-      )
-
-      renderToString(
         <JssProvider jss={localJss} registry={customSheets2}>
           <Component color="#000" />
         </JssProvider>
