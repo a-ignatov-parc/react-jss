@@ -364,6 +364,42 @@ describe('react-jss', () => {
       expect(result1).to.equal(result2)
     })
 
+    it('should be idempotent when combining renders with and without JssProvider', () => {
+      const Component = injectSheet({
+        button: {
+          color: props => props.color
+        }
+      })()
+
+      const customSheets1 = new SheetsRegistry()
+      const customSheets2 = new SheetsRegistry()
+
+      renderToString(
+        <Component color="#000" />
+      )
+
+      renderToString(
+        <JssProvider jss={localJss} registry={customSheets1}>
+          <Component color="#000" />
+        </JssProvider>
+      )
+
+      renderToString(
+        <Component color="#000" />
+      )
+
+      renderToString(
+        <JssProvider jss={localJss} registry={customSheets2}>
+          <Component color="#000" />
+        </JssProvider>
+      )
+
+      const result1 = customSheets1.toString()
+      const result2 = customSheets2.toString()
+
+      expect(result1).to.equal(result2)
+    })
+
     it('should render deterministically on server and client', () => {
       const ComponentA = injectSheet({
         button: {
