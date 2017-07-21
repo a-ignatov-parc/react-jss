@@ -1,7 +1,11 @@
+/**
+ * Key/value storage with ability to store objects as keys.
+ * Uses `Map` for performance reasons with fallback for old browsers.
+ */
 export default function instanceStore() {
   const map = typeof Map !== 'undefined' && new Map()
   const indices = []
-  const content = {}
+  const content = []
 
   function find(item) {
     return indices.indexOf(item)
@@ -19,14 +23,26 @@ export default function instanceStore() {
     set(item, value) {
       if (map) {
         map.set(item, value)
-        return this
       }
+      else {
+        const itemIndex = find(item)
+        const index = itemIndex >= 0 ? itemIndex : indices.push(item) - 1
+        content[index] = value
+      }
+      return this
+    },
+
+    delete(item) {
+      if (map) return map.delete(item)
 
       const itemIndex = find(item)
-      const index = itemIndex >= 0 ? itemIndex : indices.push(item) - 1
+      const canDelete = itemIndex >= 0
 
-      content[index] = value
-      return this
+      if (canDelete) {
+        indices.splice(itemIndex, 1)
+        content.splice(itemIndex, 1)
+      }
+      return canDelete
     }
   }
 }
