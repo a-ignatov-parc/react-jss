@@ -2,10 +2,12 @@
  * Key/value storage with ability to store objects as keys.
  * Uses `Map` for performance reasons with fallback for old browsers.
  */
-export default function instanceStore() {
-  const map = typeof Map !== 'undefined' && new Map()
+export default function objectMap(params) {
   const indices = []
   const content = []
+  const map = !(params && params.fallback)
+    && typeof Map !== 'undefined'
+    && new Map()
 
   function find(item) {
     return indices.indexOf(item)

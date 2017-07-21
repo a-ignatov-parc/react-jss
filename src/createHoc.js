@@ -5,7 +5,7 @@ import compose from './compose'
 import getDisplayName from './getDisplayName'
 import * as ns from './ns'
 import contextTypes from './contextTypes'
-import InstanceStore from './instanceStore'
+import ObjectMap from './objectMap'
 
 // Like a Symbol
 const dynamicStylesNs = Math.random()
@@ -49,7 +49,7 @@ export default (stylesOrCreator, InnerComponent, options = {}) => {
   const isThemingEnabled = typeof stylesOrCreator === 'function'
 
   const displayName = `Jss(${getDisplayName(InnerComponent)})`
-  const staticSheetCache = new InstanceStore()
+  const staticSheetCache = new ObjectMap()
   const noTheme = {}
 
   return class Jss extends Component {

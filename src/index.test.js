@@ -6,6 +6,7 @@ import {render, unmountComponentAtNode, findDOMNode} from 'react-dom'
 import {renderToString} from 'react-dom/server'
 import {stripIndent} from 'common-tags'
 import preset from 'jss-preset-default'
+import ObjectMap from './objectMap'
 
 let node
 let jss
@@ -896,6 +897,58 @@ describe('react-jss', () => {
           color: green;
         }
       `)
+    })
+  })
+
+  describe('objectMap', () => {
+    it('should set/get value for object', () => {
+      [null, {fallback: true}].forEach((params) => {
+        const map = new ObjectMap(params)
+        const obj = {}
+
+        map.set(obj, 1)
+
+        expect(map.get(obj)).to.be(1)
+      })
+    })
+
+    it('should check if there is a value for object', () => {
+      [null, {fallback: true}].forEach((params) => {
+        const map1 = new ObjectMap(params)
+        const map2 = new ObjectMap(params)
+        const obj = {}
+
+        map1.set(obj, 1)
+
+        expect(map1.has(obj)).to.be(true)
+        expect(map2.has(obj)).to.be(false)
+      })
+    })
+
+    it('should override value for object', () => {
+      [null, {fallback: true}].forEach((params) => {
+        const map = new ObjectMap(params)
+        const obj = {}
+
+        map.set(obj, 1)
+        map.set(obj, 2)
+
+        expect(map.get(obj)).to.be(2)
+      })
+    })
+
+    it('should delete value for object', () => {
+      [null, {fallback: true}].forEach((params) => {
+        const map1 = new ObjectMap(params)
+        const map2 = new ObjectMap(params)
+        const obj = {}
+
+        map1.set(obj, 1)
+
+        expect(map1.delete(obj)).to.be(true)
+        expect(map2.delete(obj)).to.be(false)
+        expect(map1.has(obj)).to.be(false)
+      })
     })
   })
 })
