@@ -73,10 +73,12 @@ export default (stylesOrCreator, InnerComponent, options = {}) => {
     }
 
     get manager() {
-      if (!staticSheetCache.has(this.registry)) {
-        staticSheetCache.set(this.registry, new SheetsManager())
+      const key = this.registry || this.jss
+
+      if (!staticSheetCache.has(key)) {
+        staticSheetCache.set(key, new SheetsManager())
       }
-      return staticSheetCache.get(this.registry)
+      return staticSheetCache.get(key)
     }
 
     get registry() {

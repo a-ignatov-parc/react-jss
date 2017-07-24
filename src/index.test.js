@@ -925,6 +925,20 @@ describe('react-jss', () => {
       })
     })
 
+    it('keys should be only objects', () => {
+      [null, {fallback: true}].forEach((params) => {
+        const map = new ObjectMap(params);
+
+        [0, 1, '', '1', true, false, null, undefined].forEach((key) => {
+          expect(() => map.set(key, 1)).to.throwException()
+        });
+
+        [{}, () => {}, []].forEach((key) => {
+          expect(() => map.set(key, 1)).to.not.throwException()
+        })
+      })
+    })
+
     it('should override value for object', () => {
       [null, {fallback: true}].forEach((params) => {
         const map = new ObjectMap(params)

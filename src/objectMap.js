@@ -1,13 +1,14 @@
 /**
  * Key/value storage with ability to store objects as keys.
- * Uses `Map` for performance reasons with fallback for old browsers.
+ * Uses `WeakMap` for performance and memory usage reasons with fallback for
+ * old browsers.
  */
 export default function objectMap(params) {
   const indices = []
   const content = []
   const map = !(params && params.fallback)
-    && typeof Map !== 'undefined'
-    && new Map()
+    && typeof WeakMap !== 'undefined'
+    && new WeakMap()
 
   function find(item) {
     return indices.indexOf(item)
@@ -23,6 +24,14 @@ export default function objectMap(params) {
     },
 
     set(item, value) {
+      const isNull = item === null
+      const isFunction = typeof item === 'function'
+      const isObject = !isNull && typeof item === 'object'
+
+      if (!isFunction && !isObject) {
+        throw new TypeError('Invalid value used as weak map key')
+      }
+
       if (map) {
         map.set(item, value)
       }
